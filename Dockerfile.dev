@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# OPTIMIZATION: Install pnpm globally first (cached separately)
+RUN npm install -g pnpm
+
+# OPTIMIZATION: Copy only package files first for dependency caching
+COPY package.json pnpm-lock.yaml* ./
+
+# OPTIMIZATION: Use BuildKit cache mounts for pnpm store
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install
+
+# Copy app files
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Start development server
+CMD ["pnpm", "dev"]
